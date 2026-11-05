@@ -1,0 +1,29 @@
+name: FAI task
+description: A unit of work for the FinanceAI project
+title: "FAI-XXX "
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What needs to be built and where (module paths).
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: input
+    id: depends
+    attributes:
+      label: Depends on
+      placeholder: FAI-001, FAI-002
+  - type: input
+    id: branch
+    attributes:
+      label: Branch
+      placeholder: feature/FAI-XXX-short-name
