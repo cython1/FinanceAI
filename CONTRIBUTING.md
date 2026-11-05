@@ -9,7 +9,7 @@ Welcome. This page gets a new developer (human or AI agent) productive quickly. 
 
 ## 2. Pick a task
 - Choose an open issue whose "Depends on" tasks have had their implementation PRs merged into `main`. A closed issue is not enough on its own, since issues can also be closed as duplicates or abandoned.
-- Assign it to yourself (or to Copilot) so nobody else picks it up.
+- Assign it to yourself so nobody else picks it up, or hand it to an agent: add the `claude` label for Claude, or assign it to Copilot. See the agents table in [AGENTS.md](AGENTS.md).
 
 ## 3. Work on a branch
 ```bash
