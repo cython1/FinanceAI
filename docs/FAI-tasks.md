@@ -25,7 +25,7 @@ Branch convention: `feature/FAI-XXX-short-name`. Commit messages: `FAI-XXX: mess
 | FAI-019 | Config and Azure clients plugin | FAI-018 | `feature/FAI-019-config-and-azure-clients-plugin` |
 | FAI-020 | Document upload endpoint | FAI-019, FAI-013 | `feature/FAI-020-document-upload-endpoint` |
 | FAI-021 | Job status endpoint | FAI-020 | `feature/FAI-021-job-status-endpoint` |
-| FAI-022 | Dashboard endpoints | FAI-019 | `feature/FAI-022-dashboard-endpoints` |
+| FAI-022 | Dashboard endpoints | FAI-019, FAI-013 | `feature/FAI-022-dashboard-endpoints` |
 | FAI-023 | Company comparison endpoint | FAI-022 | `feature/FAI-023-company-comparison-endpoint` |
 | FAI-024 | RAG retriever | FAI-019 | `feature/FAI-024-rag-retriever` |
 | FAI-025 | Prompt builder and generation | FAI-024 | `feature/FAI-025-prompt-builder-and-generation` |
@@ -71,11 +71,11 @@ Add shared/ with .env.example (all env vars), JSON Schemas for the ingestion que
 
 ### FAI-003: Provision Azure dev resources
 
-Script in infra/ (az CLI or Bicep) creating: Azure OpenAI (embedding + chat deployments), AI Search, Azure SQL, Storage account (blob container + queue), Key Vault.
+Script in infra/ (az CLI or Bicep) creating: Azure OpenAI (embedding + chat deployments), Azure AI Document Intelligence (used by FAI-008), AI Search, Azure SQL, Storage account (blob container + queue), Key Vault.
 
 **Acceptance criteria**
 - [ ] Script is idempotent
-- [ ] Outputs written to a local .env (not committed)
+- [ ] Outputs written to a local .env (not committed), including the Document Intelligence endpoint and key
 
 **Depends on:** FAI-002
 **Branch:** `feature/FAI-003-provision-azure-dev-resources`
@@ -283,7 +283,7 @@ GET /dashboard/summary and /companies/:id/kpis reading Azure SQL.
 - [ ] Zod-validated responses
 - [ ] Documents-processed count included
 
-**Depends on:** FAI-019
+**Depends on:** FAI-019, FAI-013
 **Branch:** `feature/FAI-022-dashboard-endpoints`
 
 ### FAI-023: Company comparison endpoint

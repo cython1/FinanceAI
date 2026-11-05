@@ -8,7 +8,7 @@ Welcome. This page gets a new developer (human or AI agent) productive quickly. 
 3. Browse the [issues](../../issues) and [milestones](../../milestones). Each milestone is an epic; issue #N is task FAI-N.
 
 ## 2. Pick a task
-- Choose an open issue whose "Depends on" issues are already closed.
+- Choose an open issue whose "Depends on" tasks have had their implementation PRs merged into `main`. A closed issue is not enough on its own, since issues can also be closed as duplicates or abandoned.
 - Assign it to yourself (or to Copilot) so nobody else picks it up.
 
 ## 3. Work on a branch
