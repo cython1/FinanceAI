@@ -1,0 +1,64 @@
+# Lint and Prettier gate for node-api on every pull request into main.
+#
+# The job always runs and always reports a status, so it can be marked as a
+# required check in main's branch protection without blocking PRs that don't
+# touch node-api. ESLint and Prettier only run when node-api/ or this file changed.
+name: node-api CI
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: node-api-ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: node-api lint and format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: node-api
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect node-api changes
+        id: changes
+        working-directory: .
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep -qE '^(node-api/|\.github/workflows/node-api-ci\.yml$)'; then
+            echo "node_api=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "node_api=false" >> "$GITHUB_OUTPUT"
+            echo "No changes under node-api/; skipping ESLint and Prettier." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Set up Node.js
+        if: steps.changes.outputs.node_api == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: node-api/package-lock.json
+
+      - name: Install dependencies
+        if: steps.changes.outputs.node_api == 'true'
+        run: npm ci
+
+      - name: ESLint
+        if: steps.changes.outputs.node_api == 'true'
+        run: npm run lint
+
+      - name: Prettier check
+        if: steps.changes.outputs.node_api == 'true'
+        run: npm run format:check
