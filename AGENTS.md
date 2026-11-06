@@ -35,6 +35,25 @@ See `docs/architecture.md` for the diagram and `docs/FAI-tasks.md` for the full 
 - PR title: `FAI-XXX <issue title>`; body must include `Closes #XXX` and a checklist of the acceptance criteria.
 - Target branch: `main`. Squash merge.
 
+### Agents on this repo
+
+| Agent | How to give it a task | Config |
+|---|---|---|
+| Claude (GitHub Action) | Add the `claude` label to an issue, or comment `@claude ...` on an issue or PR | `.github/workflows/claude.yml` |
+| GitHub Copilot cloud agent | Assign the issue to Copilot | `.github/copilot-instructions.md`, `.github/workflows/copilot-setup-steps.yml` |
+| Claude Code (local or claude.ai/code) | Ask it to work an issue by number | `CLAUDE.md` → this file |
+
+Give each issue to only one agent at a time. The Claude Action names its branches `feature/FAI-<issue number>-<title words>` (no zero padding); that is accepted in place of the issue's branch name.
+
+### MCP servers
+
+`.mcp.json` defines the MCP servers every Claude session uses (locally and in the GitHub Action):
+
+- **microsoft-learn**: official Microsoft/Azure docs. Check it before using any Azure SDK (OpenAI, AI Search, Document Intelligence, SQL, Storage, AKS), because those APIs change often.
+- **context7**: current docs for libraries such as Fastify, LangChain, React, TanStack Query and Pydantic.
+
+Prefer these over memory when an API detail matters. Do not add MCP servers that need secrets to `.mcp.json`; pass those in the workflow from GitHub Secrets.
+
 ## Rules that must not be broken
 
 1. **No secrets in the repo.** Read config from environment variables only. Add every new variable to `shared/.env.example` with a placeholder value.
