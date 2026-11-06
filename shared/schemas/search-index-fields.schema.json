@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cython1/FinanceAI/shared/schemas/search-index-fields.schema.json",
+  "title": "AI Search index field list",
+  "description": "Shape of shared/search/index-fields.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["fields", "vector_search", "semantic"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "description": { "type": "string" },
+    "fields": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/field" }
+    },
+    "vector_search": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profiles", "algorithms"],
+      "properties": {
+        "profiles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "algorithm"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "algorithm": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "algorithms": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "kind", "metric"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "kind": { "enum": ["hnsw", "exhaustiveKnn"] },
+              "metric": { "enum": ["cosine", "euclidean", "dotProduct", "hamming"] }
+            }
+          }
+        }
+      }
+    },
+    "semantic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default_configuration", "configurations"],
+      "properties": {
+        "default_configuration": { "type": "string", "minLength": 1 },
+        "configurations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "content_fields"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "title_field": { "type": "string" },
+              "content_fields": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+              "keywords_fields": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+        "type": {
+          "enum": [
+            "Edm.String",
+            "Edm.Int32",
+            "Edm.Int64",
+            "Edm.Double",
+            "Edm.Boolean",
+            "Edm.DateTimeOffset",
+            "Collection(Edm.String)",
+            "Collection(Edm.Single)"
+          ]
+        },
+        "key": { "type": "boolean" },
+        "searchable": { "type": "boolean" },
+        "filterable": { "type": "boolean" },
+        "sortable": { "type": "boolean" },
+        "facetable": { "type": "boolean" },
+        "retrievable": { "type": "boolean" },
+        "dimensions": {
+          "description": "Vector length: an integer, or an ${ENV_VAR} reference resolved at index-creation time.",
+          "oneOf": [
+            { "type": "integer", "minimum": 1 },
+            { "type": "string", "pattern": "^\\$\\{[A-Z][A-Z0-9_]*\\}$" }
+          ]
+        },
+        "vector_search_profile": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "if": { "properties": { "type": { "const": "Collection(Edm.Single)" } } },
+      "then": { "required": ["dimensions", "vector_search_profile"] }
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cython1/FinanceAI/shared/schemas/kpi-record.schema.json",
+  "title": "KPI record",
+  "description": "One extracted KPI value: a single metric for one company and fiscal year. python-worker writes it to Azure SQL (upsert key: company + fiscal_year + metric) and node-api reads it. value is null when the metric was not found in the report; a value is never guessed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "company",
+    "fiscal_year",
+    "metric",
+    "value",
+    "unit",
+    "currency",
+    "source_page",
+    "document_id",
+    "extracted_at"
+  ],
+  "properties": {
+    "company": {
+      "description": "Company stock ticker, upper case (e.g. AAPL).",
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9.\\-]{0,9}$"
+    },
+    "fiscal_year": {
+      "type": "integer",
+      "minimum": 1900,
+      "maximum": 2100
+    },
+    "metric": {
+      "enum": [
+        "revenue",
+        "net_income",
+        "operating_cash_flow",
+        "total_debt",
+        "operating_margin"
+      ]
+    },
+    "value": {
+      "description": "unit 'currency': amount in full currency units (1234500000, not 'in millions'). unit 'ratio': a fraction (0.315 means 31.5%). null when not found.",
+      "type": ["number", "null"]
+    },
+    "unit": {
+      "enum": ["currency", "ratio"]
+    },
+    "currency": {
+      "description": "ISO 4217 code for unit 'currency'. Always null for unit 'ratio'.",
+      "type": ["string", "null"],
+      "pattern": "^[A-Z]{3}$"
+    },
+    "source_page": {
+      "description": "1-based PDF page the value was taken from. Required when value is set and null when value is null.",
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "document_id": {
+      "description": "Document the value was extracted from (same as document_id in the ingestion queue message).",
+      "type": "string",
+      "format": "uuid"
+    },
+    "extracted_at": {
+      "description": "When the value was extracted (RFC 3339, UTC).",
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "metric": { "const": "operating_margin" } } },
+      "then": {
+        "properties": { "unit": { "const": "ratio" }, "currency": { "type": "null" } }
+      },
+      "else": {
+        "properties": { "unit": { "const": "currency" } }
+      }
+    },
+    {
+      "if": { "properties": { "value": { "type": "null" } } },
+      "then": { "properties": { "source_page": { "type": "null" } } },
+      "else": { "properties": { "source_page": { "type": "integer" } } }
+    },
+    {
+      "if": {
+        "properties": { "unit": { "const": "currency" }, "value": { "type": "number" } }
+      },
+      "then": { "properties": { "currency": { "type": "string" } } }
+    }
+  ]
+}

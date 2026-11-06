@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cython1/FinanceAI/shared/schemas/ingestion-queue-message.schema.json",
+  "title": "Ingestion queue message",
+  "description": "Message node-api puts on the ingestion queue (AZURE_STORAGE_QUEUE_NAME) after storing an uploaded PDF in Blob storage and inserting a processing_jobs row. python-worker consumes it. The message body is UTF-8 JSON text.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "job_id",
+    "document_id",
+    "blob_container",
+    "blob_name",
+    "company",
+    "fiscal_year",
+    "original_filename",
+    "content_type",
+    "enqueued_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Version of this message contract. Bump it on breaking changes.",
+      "const": 1
+    },
+    "job_id": {
+      "description": "processing_jobs row this message belongs to. The worker updates that row's status.",
+      "type": "string",
+      "format": "uuid"
+    },
+    "document_id": {
+      "description": "Stable ID of the document. Re-ingesting the same document reuses it, so chunk IDs and KPI rows are overwritten instead of duplicated.",
+      "type": "string",
+      "format": "uuid"
+    },
+    "blob_container": {
+      "description": "Container holding the PDF (normally the value of AZURE_STORAGE_BLOB_CONTAINER).",
+      "type": "string",
+      "minLength": 1
+    },
+    "blob_name": {
+      "description": "Blob name (path) of the PDF inside blob_container.",
+      "type": "string",
+      "minLength": 1
+    },
+    "company": {
+      "description": "Company stock ticker, upper case (e.g. AAPL, MSFT, TSLA). Supplied by the uploader.",
+      "$ref": "#/$defs/ticker"
+    },
+    "fiscal_year": {
+      "description": "Fiscal year the report covers. Supplied by the uploader.",
+      "$ref": "#/$defs/fiscal_year"
+    },
+    "original_filename": {
+      "description": "File name as uploaded, for display only.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\.[Pp][Dd][Ff]$"
+    },
+    "content_type": {
+      "const": "application/pdf"
+    },
+    "enqueued_at": {
+      "description": "When node-api enqueued the message (RFC 3339, UTC).",
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "ticker": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9.\\-]{0,9}$"
+    },
+    "fiscal_year": {
+      "type": "integer",
+      "minimum": 1900,
+      "maximum": 2100
+    }
+  }
+}
