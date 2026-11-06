@@ -1,0 +1,2 @@
+# Normalize line endings to LF on every platform (matches .editorconfig).
+* text=auto eol=lf

@@ -11,7 +11,7 @@ It is a **hybrid** system:
 | Part | Language | Folder | Job |
 |---|---|---|---|
 | Ingestion worker | Python 3.12 | `python-worker/` | PDF → markdown → semantic chunks → embeddings → Azure AI Search; KPI extraction → Azure SQL |
-| API | Node.js 20 + TypeScript (Fastify) | `node-api/` | Uploads, job status, dashboard/comparison data, RAG research endpoint |
+| API | Node.js 22 + TypeScript (Fastify) | `node-api/` | Uploads, job status, dashboard/comparison data, RAG research endpoint |
 | Frontend | React + Vite + TypeScript | `frontend/` | Dashboard, Comparison, Research and Upload pages |
 | Shared contracts | JSON / env | `shared/` | Env var names, queue message schema, KPI schema, search index fields |
 | Infrastructure | Bicep / az CLI, Docker, Kubernetes | `infra/` | Azure resources, containers, AKS manifests |
@@ -59,6 +59,7 @@ pytest
 ```bash
 npm ci
 npm run lint
+npm run format:check   # Prettier; CI also runs this on PRs into main
 npm run typecheck
 npm test
 npm run dev        # http://localhost:3000/health
