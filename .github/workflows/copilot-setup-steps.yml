@@ -31,10 +31,15 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install Python worker dependencies
+      - name: Install Python worker dependencies (pyproject)
         if: hashFiles('python-worker/pyproject.toml') != ''
         working-directory: python-worker
         run: pip install -e ".[dev]"
+
+      - name: Install Python worker dependencies (requirements.txt)
+        if: hashFiles('python-worker/pyproject.toml') == '' && hashFiles('python-worker/requirements.txt') != ''
+        working-directory: python-worker
+        run: pip install -r requirements.txt
 
       - name: Install Node API dependencies
         if: hashFiles('node-api/package-lock.json') != ''
