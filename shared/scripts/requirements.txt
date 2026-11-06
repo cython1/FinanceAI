@@ -1,0 +1,4 @@
+# Dependencies for shared/scripts/check_contracts.py (also used by CI).
+jsonschema==4.26.0
+# Enables "format": "date-time" checks in jsonschema.
+rfc3339-validator==0.1.4

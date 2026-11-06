@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "job_id": "6f1c2a9e-8b4d-4c3e-9a51-2d7e0f4b8c13",
+  "document_id": "0b9e7d52-3f6a-4e1b-8c2d-5a4f9e1b7c60",
+  "blob_container": "<blob-container-name>",
+  "blob_name": "EXMPL/2024/0b9e7d52-3f6a-4e1b-8c2d-5a4f9e1b7c60.pdf",
+  "company": "EXMPL",
+  "fiscal_year": 2024,
+  "original_filename": "example-annual-report-2024.pdf",
+  "content_type": "application/pdf",
+  "enqueued_at": "2026-11-06T10:15:00Z"
+}

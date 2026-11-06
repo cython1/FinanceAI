@@ -93,6 +93,12 @@ npm test
 npm run dev        # http://localhost:5173
 ```
 
+### Shared contracts (`shared/`)
+```bash
+pip install -r shared/scripts/requirements.txt
+python shared/scripts/check_contracts.py   # run from the repo root
+```
+
 ### Local services
 ```bash
 docker compose -f docker-compose.dev.yml up -d   # Azurite (blob + queue) and SQL Server

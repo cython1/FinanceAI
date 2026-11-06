@@ -1,0 +1,11 @@
+{
+  "company": "EXMPL",
+  "fiscal_year": 2024,
+  "metric": "operating_margin",
+  "value": 0.315,
+  "unit": "ratio",
+  "currency": "USD",
+  "source_page": 12,
+  "document_id": "0b9e7d52-3f6a-4e1b-8c2d-5a4f9e1b7c60",
+  "extracted_at": "2026-11-06T10:20:00Z"
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "../schemas/search-index-fields.schema.json",
+  "description": "Field list for the AI Search index of report chunks. The index NAME is not stored here; it comes from AZURE_SEARCH_INDEX_NAME. python-worker creates the index from this file (FAI-010), and node-api queries using the same field names (FAI-024). A value of the form ${VAR} must be replaced with that environment variable from shared/.env.example.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "Edm.String",
+      "key": true,
+      "filterable": true,
+      "description": "Deterministic chunk ID: '<document_id>_<chunk_index>'. Re-ingesting a document overwrites its chunks."
+    },
+    {
+      "name": "document_id",
+      "type": "Edm.String",
+      "filterable": true,
+      "description": "Same as document_id in the ingestion queue message."
+    },
+    {
+      "name": "company",
+      "type": "Edm.String",
+      "filterable": true,
+      "facetable": true,
+      "description": "Company stock ticker, upper case."
+    },
+    {
+      "name": "fiscal_year",
+      "type": "Edm.Int32",
+      "filterable": true,
+      "sortable": true,
+      "facetable": true
+    },
+    {
+      "name": "section",
+      "type": "Edm.String",
+      "searchable": true,
+      "filterable": true,
+      "facetable": true,
+      "description": "Report section heading the chunk belongs to."
+    },
+    {
+      "name": "page",
+      "type": "Edm.Int32",
+      "filterable": true,
+      "sortable": true,
+      "description": "1-based PDF page where the chunk starts. Used for citations."
+    },
+    {
+      "name": "chunk_index",
+      "type": "Edm.Int32",
+      "sortable": true,
+      "description": "0-based position of the chunk within the document."
+    },
+    {
+      "name": "content",
+      "type": "Edm.String",
+      "searchable": true,
+      "description": "Chunk text (markdown; tables are kept whole)."
+    },
+    {
+      "name": "content_vector",
+      "type": "Collection(Edm.Single)",
+      "searchable": true,
+      "retrievable": false,
+      "dimensions": "${AZURE_OPENAI_EMBEDDING_DIMENSIONS}",
+      "vector_search_profile": "default-vector-profile",
+      "description": "Embedding of content, made with the AZURE_OPENAI_EMBEDDING_DEPLOYMENT deployment."
+    }
+  ],
+  "vector_search": {
+    "profiles": [{ "name": "default-vector-profile", "algorithm": "default-hnsw" }],
+    "algorithms": [{ "name": "default-hnsw", "kind": "hnsw", "metric": "cosine" }]
+  },
+  "semantic": {
+    "default_configuration": "default-semantic-config",
+    "configurations": [
+      {
+        "name": "default-semantic-config",
+        "title_field": "section",
+        "content_fields": ["content"],
+        "keywords_fields": ["company"]
+      }
+    ]
+  }
+}
