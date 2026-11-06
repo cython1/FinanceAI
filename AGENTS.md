@@ -67,6 +67,8 @@ Prefer these over memory when an API detail matters. Do not add MCP servers that
 
 Run from the package folder. These become valid as each scaffold task lands (FAI-006, FAI-018, FAI-028).
 
+Agents: run checks yourself before pushing. Never leave a dev server running; start it with a timeout and curl it, e.g. `timeout 15 npm run dev & sleep 5 && curl -s http://localhost:3000/health`.
+
 ### Python worker (`python-worker/`)
 ```bash
 pip install -e ".[dev]"
