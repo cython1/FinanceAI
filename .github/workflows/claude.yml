@@ -90,4 +90,4 @@ jobs:
           track_progress: true
           claude_args: |
             --mcp-config .mcp.json
-            --allowedTools "mcp__microsoft-learn,mcp__context7,Bash(cd:*),Bash(npm:*),Bash(npx:*),Bash(pip install:*),Bash(pytest:*),Bash(python -m pytest:*),Bash(ruff:*),Bash(python -m ruff:*),Bash(timeout:*),Bash(curl -s http://localhost:*)"
+            --allowedTools "mcp__microsoft-learn,mcp__context7,Bash(cd:*),Bash(npm:*),Bash(npx:*),Bash(pip install:*),Bash(pytest:*),Bash(python -m pytest:*),Bash(ruff:*),Bash(python -m ruff:*),Bash(timeout:*),Bash(sleep 5),Bash(curl -s http://localhost:3000/health)"
