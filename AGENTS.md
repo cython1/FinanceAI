@@ -14,7 +14,7 @@ It is a **hybrid** system:
 | API | Node.js 22 + TypeScript (Fastify) | `node-api/` | Uploads, job status, dashboard/comparison data, RAG research endpoint |
 | Frontend | React + Vite + TypeScript | `frontend/` | Dashboard, Comparison, Research and Upload pages |
 | Shared contracts | JSON / env | `shared/` | Env var names, queue message schema, KPI schema, search index fields |
-| Infrastructure | Bicep / az CLI, Docker, Kubernetes | `infra/` | Azure resources, containers, AKS manifests |
+| Infrastructure | Terraform / az CLI, Docker, Kubernetes | `infra/` | Azure resources, containers, AKS manifests |
 
 The Python worker and Node API **never call each other**. They communicate only through Azure:
 Blob storage (raw PDFs), Storage Queue (ingestion jobs), AI Search (chunks + vectors) and Azure SQL (KPIs). Both use Azure OpenAI.
