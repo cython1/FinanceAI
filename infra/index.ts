@@ -3,7 +3,7 @@ import * as resources from "@pulumi/azure-native/resources";
 import * as random from "@pulumi/random";
 import * as cs from "@pulumi/azure-native/cognitiveservices";
 import * as storage from "@pulumi/azure-native/storage";
-import * as search from "@pulumi/azure-native/search"
+import * as search from "@pulumi/azure-native/search";
 
 const tags = { project: "FinanceAI", environment: "dev" };
 
@@ -78,6 +78,7 @@ const docIntelAccount = new cs.Account("docIntel", {
   tags,
 });
 
+// AI Search: vector + keyword index for report chunks
 const searchName = pulumi.interpolate`fai-search-${suffix.result}`;
 
 const searchService = new search.Service("search", {
@@ -115,17 +116,14 @@ const ingestionQueue = new storage.Queue("ingestionQueue", {
   queueName: "ingestion-jobs",
 });
 
-
-
+// Outputs used to build .env
+export const openAiEndpoint = openAiAccount.properties.endpoint;
+export const embeddingDeploymentName = embeddingDeployment.name;
+export const chatDeploymentName = chatDeployment.name;
+export const documentIntelligenceEndpoint = docIntelAccount.properties.endpoint;
 export const searchEndpoint = pulumi.interpolate`https://${searchService.name}.search.windows.net`;
 export const storageAccountName = storageAccount.name;
 export const storageBlobEndpoint = storageAccount.primaryEndpoints.blob;
 export const storageQueueEndpoint = storageAccount.primaryEndpoints.queue;
 export const blobContainerName = rawPdfsContainer.name;
 export const queueName = ingestionQueue.name;
-
-// Outputs used to build .env
-export const openAiEndpoint = openAiAccount.properties.endpoint;
-export const embeddingDeploymentName = embeddingDeployment.name;
-export const chatDeploymentName = chatDeployment.name;
-export const documentIntelligenceEndpoint = docIntelAccount.properties.endpoint;
