@@ -1,85 +1,65 @@
- # Azure Native TypeScript Pulumi Template
+# infra
 
- This template provides a minimal, ready-to-go Pulumi program for deploying Azure resources using the Azure Native provider in TypeScript. It establishes a basic infrastructure stack that you can use as a foundation for more complex deployments.
+Azure infrastructure for the FinanceAI dev environment, written in TypeScript with [Pulumi](https://www.pulumi.com/) (`@pulumi/azure-native`). Tracked in FAI-003.
 
- ## When to Use This Template
+## What it creates
 
- - You need a quick boilerplate for Azure Native deployments with Pulumi and TypeScript
- - You want to create a Resource Group and Storage Account as a starting point
- - You’re exploring Pulumi’s Azure Native SDK and TypeScript support
+Everything lives in the resource group `rg-financeai-dev` in **East US 2**. Globally unique names end in a random 6-character suffix (`random.RandomString`), which stays stable across `pulumi up` runs and changes after `pulumi destroy`, so Azure's soft-deleted names never block a redeploy.
 
- ## Prerequisites
+| Resource | Pulumi name | Tier | Cost |
+| --- | --- | --- | --- |
+| Resource group `rg-financeai-dev` | `resourceGroup` | — | $0 |
+| Azure OpenAI account `fai-openai-<suffix>` | `openai` | S0 (pay per token) | $0 when idle |
+| Embedding deployment `text-embedding-3-small` (v1) | `embedding` | GlobalStandard, 30K tokens/min | Cents for this project |
+| Chat deployment `gpt-5-mini` (2025-08-07) | `chat` | GlobalStandard, 10K tokens/min | Cents to a few dollars |
+| Document Intelligence `fai-docintel-<suffix>` | `docIntel` | F0 (500 pages/month free) | $0 |
 
- - An active Azure subscription
- - Node.js (LTS) installed
- - A Pulumi account and CLI already installed and configured
- - Azure credentials available (e.g., via `az login` or environment variables)
+Still to add for FAI-003: AI Search (Free), Storage (blob container + queue), Azure SQL (free offer) and the script that writes `.env`.
 
- ## Usage
+### Model notes
+- `gpt-4o-mini` 2024-07-18 can no longer be deployed (`ServiceModelDeprecating`), and this subscription has no quota for `gpt-5.4-mini`, so the chat model is **`gpt-5-mini`**. It retires **2027-07-13**; switch to `gpt-5.4-mini` when quota is available. Services read the deployment name from `AZURE_OPENAI_CHAT_DEPLOYMENT`, so only this file and `.env` change.
+- Check a model before using it:
+  ```bash
+  az cognitiveservices model list --location eastus2 --query "[?model.name=='gpt-5-mini'].{version:model.version, status:model.lifecycleStatus, retires:model.deprecation.inference}" -o table
+  ```
 
- Scaffold a new project from the Pulumi registry template:
- ```bash
- pulumi new azure-typescript
- ```
+## Prerequisites
 
- Follow the prompts to:
- 1. Name your project and stack
- 2. (Optionally) override the default Azure location
+- Node.js 22, the [Pulumi CLI](https://www.pulumi.com/docs/install/) and the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
+- An Azure subscription (the free account's $200 credit covers this)
+- Signed in to both:
+  ```bash
+  az login --tenant <tenant-id>    # completes the MFA prompt Azure requires
+  az account set --subscription "<subscription name or id>"
+  pulumi login
+  ```
 
- Once the project is created:
- ```bash
- cd <your-project-name>
- pulumi config set azure-native:location <your-region>
- pulumi up
- ```
+## Usage
 
- ## Project Layout
+From `infra/`:
 
- ```
- .
- ├── Pulumi.yaml       # Project metadata & template configuration
- ├── index.ts          # Main Pulumi program defining resources
- ├── package.json      # Node.js dependencies and project metadata
- └── tsconfig.json     # TypeScript compiler options
- ```
+```bash
+npm ci
+pulumi stack select dev
+pulumi preview      # shows the plan, creates nothing
+pulumi up           # creates or updates resources; a second run reports no changes
+pulumi stack output # endpoints and deployment names
+```
 
- ## Configuration
+## Outputs
 
- Pulumi configuration lets you customize deployment parameters.
+| Output | Used for |
+| --- | --- |
+| `openAiEndpoint` | `AZURE_OPENAI_ENDPOINT` |
+| `embeddingDeploymentName` | `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` |
+| `chatDeploymentName` | `AZURE_OPENAI_CHAT_DEPLOYMENT` |
+| `documentIntelligenceEndpoint` | `AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT` |
+| `resourceGroupName`, `nameSuffix` | Reference |
 
- - **azure-native:location** (string)
-   - Description: Azure region to provision resources in
-   - Default: `WestUS2`
+## Tear down
 
- Set a custom location before deployment:
- ```bash
- pulumi config set azure-native:location eastus
- ```
+```bash
+pulumi destroy
+```
 
- ## Resources Created
-
- 1. **Resource Group**: A container for all other resources
- 2. **Storage Account**: A StorageV2 account with Standard_LRS SKU
-
- ## Outputs
-
- After `pulumi up`, the following output is exported:
- - **storageAccountName**: The name of the created Storage Account
-
- Retrieve it with:
- ```bash
- pulumi stack output storageAccountName
- ```
-
- ## Next Steps
-
- - Extend this template by adding more Azure Native resources (e.g., Networking, App Services)
- - Modularize your stack with Pulumi Components for reusable architectures
- - Integrate with CI/CD pipelines (GitHub Actions, Azure DevOps, etc.)
-
- ## Getting Help
-
- If you have questions or run into issues:
- - Explore the Pulumi docs: https://www.pulumi.com/docs/
- - Join the Pulumi Community on Slack: https://pulumi-community.slack.com/
- - File an issue on the Pulumi Azure Native SDK GitHub: https://github.com/pulumi/pulumi-azure-native/issues
+Deletes everything in the stack. Run it when you stop working on the project for a while; `pulumi up` recreates it in a few minutes.

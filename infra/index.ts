@@ -53,7 +53,7 @@ const chatDeployment = new cs.Deployment(
     resourceGroupName: resourceGroup.name,
     accountName: openAiAccount.name,
     deploymentName: "gpt-5-mini",
-    sku: { name: "GlobalStandard", capacity: 10 }, // thousands of tokens/min; lower to 10 on a quota error
+    sku: { name: "GlobalStandard", capacity: 10 }, // thousands of tokens/min; gpt-5-mini quota here is 500
     properties: {
       model: { format: "OpenAI", name: "gpt-5-mini", version: "2025-08-07" },
     },

@@ -1,5 +1,5 @@
 name: financeai
-description: helps review finance dox
+description: FinanceAI Azure infrastructure (dev)
 runtime:
   name: nodejs
   options:
