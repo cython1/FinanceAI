@@ -2,6 +2,8 @@ import * as pulumi from "@pulumi/pulumi";
 import * as resources from "@pulumi/azure-native/resources";
 import * as random from "@pulumi/random";
 import * as cs from "@pulumi/azure-native/cognitiveservices";
+import * as storage from "@pulumi/azure-native/storage";
+import * as search from "@pulumi/azure-native/search";
 
 const tags = { project: "FinanceAI", environment: "dev" };
 
@@ -76,8 +78,52 @@ const docIntelAccount = new cs.Account("docIntel", {
   tags,
 });
 
+// AI Search: vector + keyword index for report chunks
+const searchName = pulumi.interpolate`fai-search-${suffix.result}`;
+
+const searchService = new search.Service("search", {
+  resourceGroupName: resourceGroup.name,
+  searchServiceName: searchName,
+  location: "centralus", // eastus2 had no Search capacity (InsufficientResourcesAvailable)
+  sku: { name: "free" },
+  replicaCount: 1,
+  partitionCount: 1,
+  tags,
+});
+
+// Storage: raw PDFs (blob) + ingestion jobs (queue)
+const storageAccount = new storage.StorageAccount("storage", {
+  resourceGroupName: resourceGroup.name,
+  accountName: pulumi.interpolate`faist${suffix.result}`, // 3-24 lowercase letters/digits, no hyphens
+  kind: "StorageV2",
+  sku: { name: "Standard_LRS" },
+  allowBlobPublicAccess: false,
+  minimumTlsVersion: "TLS1_2",
+  enableHttpsTrafficOnly: true,
+  tags,
+});
+
+const rawPdfsContainer = new storage.BlobContainer("rawPdfs", {
+  resourceGroupName: resourceGroup.name,
+  accountName: storageAccount.name, // output, so the container waits for the account
+  containerName: "raw-pdfs",
+  publicAccess: "None",
+});
+
+const ingestionQueue = new storage.Queue("ingestionQueue", {
+  resourceGroupName: resourceGroup.name,
+  accountName: storageAccount.name,
+  queueName: "ingestion-jobs",
+});
+
 // Outputs used to build .env
 export const openAiEndpoint = openAiAccount.properties.endpoint;
 export const embeddingDeploymentName = embeddingDeployment.name;
 export const chatDeploymentName = chatDeployment.name;
 export const documentIntelligenceEndpoint = docIntelAccount.properties.endpoint;
+export const searchEndpoint = pulumi.interpolate`https://${searchService.name}.search.windows.net`;
+export const storageAccountName = storageAccount.name;
+export const storageBlobEndpoint = storageAccount.primaryEndpoints.blob;
+export const storageQueueEndpoint = storageAccount.primaryEndpoints.queue;
+export const blobContainerName = rawPdfsContainer.name;
+export const queueName = ingestionQueue.name;
