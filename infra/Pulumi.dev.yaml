@@ -1,2 +1,5 @@
 config:
   azure-native:location: eastus2
+  financeai:sqlAdminLogin: faiadmin
+  financeai:sqlAdminPassword:
+    secure: AAABAAwS3avQ6VM7MlQkqJ7qTYANpYm77ZOVeLg+37Z2mGu7CzpKqTRcQ8/B
