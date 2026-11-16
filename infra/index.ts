@@ -4,6 +4,7 @@ import * as random from "@pulumi/random";
 import * as cs from "@pulumi/azure-native/cognitiveservices";
 import * as storage from "@pulumi/azure-native/storage";
 import * as search from "@pulumi/azure-native/search";
+import * as sql from "@pulumi/azure-native/sql";
 
 const tags = { project: "FinanceAI", environment: "dev" };
 
@@ -116,6 +117,56 @@ const ingestionQueue = new storage.Queue("ingestionQueue", {
   queueName: "ingestion-jobs",
 });
 
+const config = new pulumi.Config();
+const sqlAdminLogin = config.get("sqlAdminLogin") ?? "faiadmin";
+const sqlAdminPassword = config.requireSecret("sqlAdminPassword");
+const clientIp = config.get("clientIp");
+
+const sqlServer = new sql.Server("server", {
+  administratorLogin: sqlAdminLogin,
+  administratorLoginPassword: sqlAdminPassword,
+  serverName: pulumi.interpolate`fai-sql-${suffix.result}`,
+  resourceGroupName: resourceGroup.name,
+  location: "centralus",
+});
+const database = new sql.Database("app-db", {
+  resourceGroupName: resourceGroup.name,
+  serverName: sqlServer.name,
+  location: "centralus",
+  sku: {
+    name: "GP_S_Gen5",
+    tier: "GeneralPurpose",
+    family: "Gen5",
+    capacity: 2,
+  },
+  autoPauseDelay: 60,
+  minCapacity: 0.5,
+  useFreeLimit: true,
+  freeLimitExhaustionBehavior: "AutoPause",
+});
+
+// 4. Optional: Allow Azure services to access the server
+new sql.FirewallRule("allowAzureServices", {
+  resourceGroupName: resourceGroup.name,
+  serverName: sqlServer.name,
+  firewallRuleName: "AllowAzureServices",
+  startIpAddress: "0.0.0.0",
+  endIpAddress: "0.0.0.0",
+});
+
+if (clientIp) {
+  new sql.FirewallRule("allowDeveloperIp", {
+    resourceGroupName: resourceGroup.name,
+    serverName: sqlServer.name,
+    firewallRuleName: "AllowDeveloperIp",
+    startIpAddress: clientIp,
+    endIpAddress: clientIp,
+  });
+}
+
+// Export the server's fully qualified domain name
+export const sqlServerName = sqlServer.fullyQualifiedDomainName;
+export const databaseName = database.name;
 // Outputs used to build .env
 export const openAiEndpoint = openAiAccount.properties.endpoint;
 export const embeddingDeploymentName = embeddingDeployment.name;
