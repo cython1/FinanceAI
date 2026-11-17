@@ -1,6 +1,6 @@
 # frontend
 
-The FinanceAI web app: React 19, TypeScript, Vite, React Router and TanStack Query. It talks only to `node-api`.
+The FinanceAI web app: Vue 3, TypeScript, Vite, Vue Router and Pinia. It talks only to `node-api`.
 
 ## Setup
 
@@ -10,7 +10,7 @@ npm ci
 npm run dev        # http://localhost:5173
 ```
 
-Requires Node.js 22.22 or newer.
+Requires Node.js 22.18 or newer.
 
 ## Pages
 
@@ -21,7 +21,7 @@ Requires Node.js 22.22 or newer.
 | `/research` | Research: questions with cited answers       | FAI-032 |
 | `/upload`   | Upload a report and follow its status        | FAI-033 |
 
-Routes and the nav both come from [`src/routes.tsx`](src/routes.tsx); add a page there once and it appears in both. Unknown paths show a not-found page.
+Routes and nav items live in [`src/router/routes.ts`](src/router/routes.ts). Add a page there and add its nav entry to `NAV_ITEMS`. Unknown paths show a not-found page. Pages other than the dashboard are lazy-loaded.
 
 ## Configuration
 
@@ -37,13 +37,15 @@ Vite reads `VITE_*` variables from the **repo-root `.env`** (`envDir: ".."`), th
 
 | Path                           | Contents                                                  |
 | ------------------------------ | --------------------------------------------------------- |
-| `src/main.tsx`                 | Entry: router and TanStack Query providers                |
-| `src/routes.tsx`               | Route table and nav items                                 |
-| `src/components/AppLayout.tsx` | Header, nav and page outlet                               |
-| `src/pages/`                   | One component per page (placeholders until their tickets) |
-| `src/lib/queryClient.ts`       | TanStack Query defaults                                   |
+| `src/main.ts`                  | Entry: installs Pinia and the router                      |
+| `src/router/routes.ts`         | Route table and nav items                                 |
+| `src/router/index.ts`          | Router with browser history                               |
+| `src/components/AppLayout.vue` | Header, nav and page outlet                               |
+| `src/views/`                   | One component per page (placeholders until their tickets) |
+| `src/stores/`                  | Pinia stores (none yet)                                   |
+| `src/__tests__/`               | Vitest + Vue Test Utils tests                             |
 
-Styling is plain CSS for now; the styling approach (UI library or not) is still to be decided.
+Still to decide: how server data is fetched and cached (Pinia stores or TanStack Vue Query), and the styling approach (UI library or not). Styling is plain CSS for now.
 
 ## Checks
 
