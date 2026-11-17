@@ -7,7 +7,11 @@ import * as search from "@pulumi/azure-native/search";
 import * as sql from "@pulumi/azure-native/sql";
 
 const tags = { project: "FinanceAI", environment: "dev" };
-
+const config = new pulumi.Config();
+const sqlAdminLogin = config.get("sqlAdminLogin") ?? "faiadmin";
+const sqlAdminPassword = config.requireSecret("sqlAdminPassword");
+//const clientIp = pulumi.output(config.getSecret("clientIp") ?? "0.0.0.0");
+const sqlLocation = config.get("sqlLocation") ?? "centralus";
 // Random suffix: keeps globally unique names stable; a new one after destroy avoids soft-delete name conflicts
 const suffix = new random.RandomString("suffix", {
   length: 6,
@@ -85,7 +89,7 @@ const searchName = pulumi.interpolate`fai-search-${suffix.result}`;
 const searchService = new search.Service("search", {
   resourceGroupName: resourceGroup.name,
   searchServiceName: searchName,
-  location: "centralus", // eastus2 had no Search capacity (InsufficientResourcesAvailable)
+  location: sqlLocation, // eastus2 had no Search capacity (InsufficientResourcesAvailable)
   sku: { name: "free" },
   replicaCount: 1,
   partitionCount: 1,
@@ -117,56 +121,58 @@ const ingestionQueue = new storage.Queue("ingestionQueue", {
   queueName: "ingestion-jobs",
 });
 
-const config = new pulumi.Config();
-const sqlAdminLogin = config.get("sqlAdminLogin") ?? "faiadmin";
-const sqlAdminPassword = config.requireSecret("sqlAdminPassword");
-const clientIp = config.get("clientIp");
 
-const sqlServer = new sql.Server("server", {
-  administratorLogin: sqlAdminLogin,
-  administratorLoginPassword: sqlAdminPassword,
-  serverName: pulumi.interpolate`fai-sql-${suffix.result}`,
-  resourceGroupName: resourceGroup.name,
-  location: "centralus",
-});
-const database = new sql.Database("app-db", {
-  resourceGroupName: resourceGroup.name,
-  serverName: sqlServer.name,
-  location: "centralus",
-  sku: {
-    name: "GP_S_Gen5",
-    tier: "GeneralPurpose",
-    family: "Gen5",
-    capacity: 2,
+
+// Azure SQL logical server (decision 0001)
+const sqlServer = new sql.Server(
+  "sqlServer",
+  {
+    resourceGroupName: resourceGroup.name,
+    serverName: pulumi.interpolate`fai-sql-${suffix.result}`,
+    location: sqlLocation,
+    administratorLogin: sqlAdminLogin,
+    administratorLoginPassword: sqlAdminPassword,
+    version: "12.0",
+    minimalTlsVersion: "1.2",
+    publicNetworkAccess: "Enabled", // dev only; production uses a private endpoint
+    tags,
   },
-  autoPauseDelay: 60,
-  minCapacity: 0.5,
-  useFreeLimit: true,
-  freeLimitExhaustionBehavior: "AutoPause",
-});
+  { aliases: [{ name: "server" }] }, // keeps the already-created server if you ran `up` with the old name
+);
 
-// 4. Optional: Allow Azure services to access the server
+// Serverless database on the free offer: pauses when idle or when the monthly free limit is used
+const sqlDatabase = new sql.Database(
+  "sqlDatabase",
+  {
+    resourceGroupName: resourceGroup.name,
+    serverName: sqlServer.name,
+    databaseName: "financeai",
+    location: sqlLocation,
+    sku: { name: "GP_S_Gen5", tier: "GeneralPurpose", family: "Gen5", capacity: 2 },
+    maxSizeBytes: 34359738368, // 32 GB, the free offer's storage limit
+    autoPauseDelay: 60, // minutes
+    minCapacity: 0.5,
+    useFreeLimit: true, // one or few free databases per subscription
+    freeLimitExhaustionBehavior: "AutoPause", // never bills; pauses until next month
+    tags,
+  },
+    { aliases: [{ name: "app-db" }], deleteBeforeReplace: true },
+);
+
+// Allows any Azure-hosted resource (any tenant) through the firewall, needed by the deployed
+// containers in Phase 2. Acceptable for dev; production replaces this with a private endpoint.
 new sql.FirewallRule("allowAzureServices", {
   resourceGroupName: resourceGroup.name,
   serverName: sqlServer.name,
   firewallRuleName: "AllowAzureServices",
   startIpAddress: "0.0.0.0",
   endIpAddress: "0.0.0.0",
+  
 });
-
-if (clientIp) {
-  new sql.FirewallRule("allowDeveloperIp", {
-    resourceGroupName: resourceGroup.name,
-    serverName: sqlServer.name,
-    firewallRuleName: "AllowDeveloperIp",
-    startIpAddress: clientIp,
-    endIpAddress: clientIp,
-  });
-}
 
 // Export the server's fully qualified domain name
 export const sqlServerName = sqlServer.fullyQualifiedDomainName;
-export const databaseName = database.name;
+export const databaseName = sqlDatabase.name;
 // Outputs used to build .env
 export const openAiEndpoint = openAiAccount.properties.endpoint;
 export const embeddingDeploymentName = embeddingDeployment.name;
