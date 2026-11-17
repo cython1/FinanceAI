@@ -45,6 +45,9 @@ packages = ["src/financeai_worker"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+  "azure: calls real Azure services; run with RUN_AZURE_TESTS=1 and a filled-in .env",
+]
 
 [tool.ruff]
 line-length = 100
