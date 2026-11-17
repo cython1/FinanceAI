@@ -1,0 +1,55 @@
+[project]
+name = "financeai-worker"
+version = "0.1.0"
+description = "FinanceAI ingestion worker: PDF parsing, chunking, indexing and KPI extraction"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  # PDF parsing (FAI-008)
+  "azure-ai-documentintelligence==1.0.2",
+  "pymupdf4llm==2.1",
+  # LLM, embeddings and chunking (FAI-007, FAI-009, FAI-012)
+  "openai==3.46.0",
+  "langchain-core==1.7.6",
+  "langchain-openai==1.7.4",
+  "langchain-experimental==0.4.2",
+  # Azure services (FAI-010, FAI-011, FAI-015)
+  "azure-core==1.41.0",
+  "azure-identity==1.27.0",
+  "azure-search-documents==12.0.0",
+  "azure-storage-blob==12.31.1",
+  "azure-storage-queue==12.18.1",
+  # Azure SQL (FAI-013, FAI-014). pyodbc needs Microsoft ODBC Driver 18 for SQL Server.
+  "sqlalchemy==2.1.8",
+  "pyodbc==5.3.0",
+  # Models and config
+  "pydantic==2.14.2",
+  "pydantic-settings==2.16.2",
+  "python-dotenv==1.2.4",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.2.0",
+  "pytest-mock==3.17.0",
+  "ruff==0.17.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/financeai_worker"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
