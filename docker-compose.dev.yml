@@ -1,0 +1,92 @@
+# Local development services (FAI-004): Azure Storage emulator + SQL Server.
+#
+#   docker compose -f docker-compose.dev.yml up -d     # start (first run downloads ~2 GB)
+#   docker compose -f docker-compose.dev.yml ps        # azurite and sqlserver should be healthy
+#   docker compose -f docker-compose.dev.yml down      # stop, keep data
+#   docker compose -f docker-compose.dev.yml down -v   # stop and delete data
+#
+# Values come from the repo-root .env. Set LOCAL_SQL_SA_PASSWORD there first, then point the
+# services at these containers with the "Local development" values in shared/.env.example.
+#
+# AI services (Azure OpenAI, Document Intelligence, AI Search) have no local emulator; local
+# development still uses the Azure ones from FAI-003.
+
+name: financeai-dev
+
+services:
+  # Blob + Queue emulator. Well-known dev account: devstoreaccount1 (public, not a secret).
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.36.0
+    command: >
+      azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0
+      --location /data --skipApiVersionCheck --loose
+    ports:
+      - "10000:10000" # blob
+      - "10001:10001" # queue
+    volumes:
+      - azurite-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 10000 && nc -z 127.0.0.1 10001"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Creates the PDF container and the ingestion queue, then exits.
+  azurite-init:
+    image: mcr.microsoft.com/azure-cli:2.92.0
+    depends_on:
+      azurite:
+        condition: service_healthy
+    environment:
+      AZURE_STORAGE_CONNECTION_STRING: >-
+        DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;
+      BLOB_CONTAINER: ${AZURE_STORAGE_BLOB_CONTAINER:-raw-pdfs}
+      QUEUE_NAME: ${AZURE_STORAGE_QUEUE_NAME:-ingestion-jobs}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        az storage container create --name "$$BLOB_CONTAINER" --only-show-errors -o none &&
+        az storage queue create --name "$$QUEUE_NAME" --only-show-errors -o none &&
+        echo "Azurite ready: container $$BLOB_CONTAINER, queue $$QUEUE_NAME"
+    restart: "no"
+
+  # SQL Server 2022 Developer edition: the same engine as Azure SQL Database.
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${LOCAL_SQL_SA_PASSWORD:?Set LOCAL_SQL_SA_PASSWORD in the repo-root .env (8+ chars, 3 of upper/lower/digit/symbol)}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" -b -o /dev/null
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # Creates the application database (same name as in Azure), then exits.
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: ${LOCAL_SQL_SA_PASSWORD:?Set LOCAL_SQL_SA_PASSWORD in the repo-root .env}
+      DATABASE: ${AZURE_SQL_DATABASE:-financeai}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        /opt/mssql-tools18/bin/sqlcmd -C -S sqlserver -U sa -P "$$MSSQL_SA_PASSWORD" -b
+        -Q "IF DB_ID(N'$$DATABASE') IS NULL CREATE DATABASE [$$DATABASE];" &&
+        echo "SQL Server ready: database $$DATABASE"
+    restart: "no"
+
+volumes:
+  azurite-data:
+  sqlserver-data:
