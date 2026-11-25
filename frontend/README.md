@@ -42,10 +42,10 @@ Vite reads `VITE_*` variables from the **repo-root `.env`** (`envDir: ".."`), th
 | `src/router/index.ts`          | Router with browser history                               |
 | `src/components/AppLayout.vue` | Header, nav and page outlet                               |
 | `src/views/`                   | One component per page (placeholders until their tickets) |
-| `src/stores/`                  | Pinia stores (none yet)                                   |
+| `src/stores/`                  | Pinia stores, one per data area (none yet)                |
 | `src/__tests__/`               | Vitest + Vue Test Utils tests                             |
 
-Still to decide: how server data is fetched and cached (Pinia stores or TanStack Vue Query), and the styling approach (UI library or not). Styling is plain CSS for now.
+Server data lives in Pinia stores: each store calls the typed API client (FAI-029) and holds the data, loading and error state; components read from stores and do not call the API directly. Still to decide: the styling approach (UI library or not) and the chart library for the Compare page. Styling is plain CSS for now.
 
 ## Checks
 

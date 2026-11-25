@@ -12,7 +12,7 @@ It is a **hybrid** system:
 |---|---|---|---|
 | Ingestion worker | Python 3.12 | `python-worker/` | PDF → markdown → semantic chunks → embeddings → Azure AI Search; KPI extraction → Azure SQL |
 | API | Node.js 22 + TypeScript (Fastify) | `node-api/` | Uploads, job status, dashboard/comparison data, RAG research endpoint |
-| Frontend | React + Vite + TypeScript | `frontend/` | Dashboard, Comparison, Research and Upload pages |
+| Frontend | Vue 3 + Vite + TypeScript, Pinia | `frontend/` | Dashboard, Comparison, Research and Upload pages |
 | Shared contracts | JSON / env | `shared/` | Env var names, queue message schema, KPI schema, search index fields |
 | Infrastructure | Pulumi (TypeScript), Docker, Kubernetes | `infra/` | Azure resources, containers, AKS manifests |
 
@@ -50,7 +50,7 @@ Give each issue to only one agent at a time. The Claude Action names its branche
 `.mcp.json` defines the MCP servers every Claude session uses (locally and in the GitHub Action):
 
 - **microsoft-learn**: official Microsoft/Azure docs. Check it before using any Azure SDK (OpenAI, AI Search, Document Intelligence, SQL, Storage, AKS), because those APIs change often.
-- **context7**: current docs for libraries such as Fastify, LangChain, React, TanStack Query and Pydantic.
+- **context7**: current docs for libraries such as Fastify, LangChain, Vue, Pinia and Pydantic.
 
 Prefer these over memory when an API detail matters. Do not add MCP servers that need secrets to `.mcp.json`; pass those in the workflow from GitHub Secrets.
 
@@ -110,7 +110,7 @@ docker compose -f docker-compose.dev.yml up -d   # Azurite (blob + queue) and SQ
 
 - **Python:** type hints everywhere, Pydantic models for data crossing a boundary, `pydantic-settings` for config, ruff for lint/format, pytest.
 - **TypeScript:** `strict` mode, zod schemas for request/response validation, no `any`, ESLint + Prettier, vitest.
-- **React:** function components, TanStack Query for server state, no global state library unless an issue asks for one.
+- **Vue:** single-file components with `<script setup lang="ts">` (Composition API), Vue Router for pages, Pinia stores for server data (API calls, loading and error state) and shared state. Components read from stores and do not call the API directly.
 - Prefer small modules with one responsibility. Match the module paths named in each issue.
 
 ## Before opening a PR

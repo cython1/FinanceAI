@@ -17,7 +17,7 @@ flowchart LR
     N2[RAG pipeline]
     N3[Dashboard + compare]
   end
-  FE[React frontend] --> NODE
+  FE[Vue frontend] --> NODE
   N1 --> B
   N1 --> Q
   Q --> P1

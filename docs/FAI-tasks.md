@@ -341,11 +341,11 @@ Central error handler, request IDs, rate limiting, CORS, OpenAPI docs via @fasti
 **Depends on:** FAI-026
 **Branch:** `feature/FAI-027-api-hardening`
 
-## Epic 3 — React frontend
+## Epic 3 — Vue frontend
 
 ### FAI-028: Frontend scaffold
 
-Vite + React + TypeScript, react-router, TanStack Query, app layout and nav.
+Vite + Vue 3 + TypeScript, Vue Router, Pinia, app layout and nav.
 
 **Acceptance criteria**
 - [ ] Routes for Dashboard, Compare, Research, Upload
@@ -355,7 +355,7 @@ Vite + React + TypeScript, react-router, TanStack Query, app layout and nav.
 
 ### FAI-029: Typed API client
 
-api/ module with typed fetchers and query hooks for every endpoint.
+api/ module with typed fetchers for every endpoint, and Pinia stores that call them and hold data, loading and error state.
 
 **Acceptance criteria**
 - [ ] Base URL from env
@@ -376,7 +376,7 @@ KPI cards (revenue, net income, cash flow, debt, documents processed) with compa
 
 ### FAI-031: Comparison page
 
-Recharts line charts for revenue and profit trends across selected companies.
+Line charts for revenue and profit trends across selected companies.
 
 **Acceptance criteria**
 - [ ] Metric switcher
