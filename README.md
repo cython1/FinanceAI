@@ -20,7 +20,7 @@ The first dataset is the annual reports of **Apple, Microsoft and Tesla**.
 
 ```mermaid
 flowchart LR
-  FE[React frontend] --> API
+  FE[Vue frontend] --> API
 
   subgraph API["node-api · Node.js + Fastify"]
     N1[Upload + job status]
@@ -80,7 +80,7 @@ More detail: [docs/architecture.md](docs/architecture.md).
 | --- | --- |
 | Ingestion worker | Python 3.12, Azure AI Document Intelligence, pymupdf4llm, LangChain, Pydantic, SQLAlchemy |
 | API | Node.js 22, TypeScript (strict), Fastify, zod, pino, Vitest |
-| Frontend | React, Vite, TypeScript, TanStack Query, Recharts |
+| Frontend | Vue 3, Vite, TypeScript, Vue Router, Pinia |
 | AI and search | Azure OpenAI (embeddings + chat), Azure AI Search (vector + hybrid) |
 | Data | Azure SQL, Azure Blob Storage, Azure Storage Queue |
 | Infrastructure | Docker, Azure Kubernetes Service (AKS), Bicep, Key Vault, GitHub Actions |
@@ -91,7 +91,7 @@ More detail: [docs/architecture.md](docs/architecture.md).
 | --- | --- |
 | [`python-worker/`](python-worker/) | Ingestion pipeline: parsing, chunking, indexing, KPI extraction |
 | [`node-api/`](node-api/) | Fastify API: uploads, jobs, dashboard, comparison, RAG research |
-| [`frontend/`](frontend/) | React app: Dashboard, Comparison, Research and Upload pages |
+| [`frontend/`](frontend/) | Vue app: Dashboard, Comparison, Research and Upload pages |
 | [`shared/`](shared/) | Env var template, JSON Schemas, examples, search index fields, contract check |
 | [`infra/`](infra/) | Azure provisioning, containers and AKS manifests |
 | [`docs/`](docs/) | Architecture and the full task list |
@@ -105,7 +105,7 @@ Work is tracked as GitHub issues **FAI-001 to FAI-040** across five epics. Full 
 | 0. Foundation | Monorepo, shared contracts, Azure provisioning, local dev, CI | Monorepo and shared contracts done |
 | 1. Python ingestion worker | Parsing, chunking, indexing, KPI extraction, evaluation | Up next |
 | 2. Node.js API | Uploads, jobs, dashboard, comparison, RAG research | Project setup done (`/health`, tests, CI) |
-| 3. React frontend | Dashboard, Comparison, Research, Upload | Not started |
+| 3. Vue frontend | Dashboard, Comparison, Research, Upload | Scaffold done (Vue 3, Vue Router, Pinia) |
 | 4. Containers and AKS | Dockerfiles, ACR, Kubernetes, workload identity | Not started |
 
 ## Getting started
