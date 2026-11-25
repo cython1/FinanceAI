@@ -130,6 +130,20 @@ npm test
 npm run dev          # http://localhost:3000/health
 ```
 
+### Local services (no Azure needed for storage and SQL)
+
+[`docker-compose.dev.yml`](docker-compose.dev.yml) runs **Azurite** (Blob + Queue emulator) and **SQL Server 2022**, and creates the `raw-pdfs` container, the `ingestion-jobs` queue and the `financeai` database.
+
+1. In `.env`, set `LOCAL_SQL_SA_PASSWORD` (8+ characters, 3 of upper/lower/digit/symbol).
+2. Start them:
+   ```bash
+   docker compose -f docker-compose.dev.yml up -d
+   docker compose -f docker-compose.dev.yml ps    # azurite and sqlserver: healthy
+   ```
+3. Point the services at them with the **Local development** values at the end of [`shared/.env.example`](shared/.env.example): the Azurite connection string, and `AZURE_SQL_SERVER=localhost` with `AZURE_SQL_TRUST_SERVER_CERTIFICATE=true`.
+
+Stop with `docker compose -f docker-compose.dev.yml down` (add `-v` to delete the data). AI services (OpenAI, Document Intelligence, Search) have no local emulator and stay on Azure.
+
 ## How this project is built
 
 Each task is a scoped GitHub issue with acceptance criteria, dependencies and a branch name. Work is done on `feature/FAI-XXX-*` branches and merged through reviewed pull requests.
